@@ -13,12 +13,6 @@
          3. カードグリッド：レスポンシブな180px-220px設定で、将来の多項目化に対応。
          4. アイコン：画像ファイルと絵文字の両方に対応した柔軟なレンダリング。
     -->
-    <!-- Visualization & Content Choices: 
-         - レイアウト (Goal: Organize): 余白を活かしたミニマルデザイン。
-         - 疾患カード (Goal: Organize): 指定された臨床画像やアイコンと簡潔な説明文で構成。
-         - インタラクション: クリック時のスムーズな遷移。
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
         
@@ -158,6 +152,10 @@
     </footer>
 
     <script>
+        /**
+         * --- ガイド項目の追加・編集エリア ---
+         * 新しく追加する場合は、[ ] の中に新しい { } ブロックをコピーして追加してください。
+         */
         const guides = [
             {
                 title: "ウイルス性のイボ",
@@ -173,6 +171,15 @@
                 desc: "洗浄方法とお薬の塗り方。",
                 url: "aftercare_movie.html"
             },
+            /* ここに新しい項目を追加していく例：
+               {
+                   title: "ニキビの治療",
+                   kana: "尋常性ざ瘡",
+                   icon: "acne.png",
+                   desc: "正しい洗顔方法と薬の使い方。",
+                   url: "acne_movie.html"
+               },
+            */
             {
                 title: "粉瘤（ふんりゅう）",
                 kana: "アテローム",
