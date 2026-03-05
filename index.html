@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疾患説明ライブラリ・ポータル</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Clinical Mint & Soft Slate -->
+    <!-- Application Structure Plan: 
+         不要な統計情報を排除し、疾患選択に特化した「シンプルハブ」構造。
+         1. ヘッダー：最小限のブランド提示。
+         2. メインエリア：導入文の後に即座にカードグリッドを配置し、視認性を最大化。
+         3. カードグリッド：レスポンシブな180px-220px設定で、将来の多項目化に対応。
+         4. アイコン：画像ファイルと絵文字の両方に対応した柔軟なレンダリング。
+    -->
+    <!-- Visualization & Content Choices: 
+         - レイアウト (Goal: Organize): 余白を活かしたミニマルデザイン。
+         - 疾患カード (Goal: Organize): 指定された臨床画像やアイコンと簡潔な説明文で構成。
+         - インタラクション: クリック時のスムーズな遷移。
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+        
+        body { 
+            font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3", "Meiryo", "Noto Sans JP", sans-serif;
+            background-color: #f1f5f9; 
+            color: #334155; 
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .bg-container {
+            background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+            z-index: -1;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bg-deco {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            top: -25%;
+            left: -25%;
+            background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
+            animation: waveFlow 40s infinite linear;
+            filter: blur(60px);
+        }
+
+        @keyframes waveFlow {
+            0% { transform: rotate(0deg) translate(0, 0); }
+            50% { transform: rotate(5deg) translate(2%, 5%); }
+            100% { transform: rotate(0deg) translate(0, 0); }
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 1.5rem;
+            }
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            height: 100%;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            background: white;
+            box-shadow: 0 15px 30px rgba(6, 78, 59, 0.08);
+            border-color: #10b981;
+        }
+
+        .icon-box {
+            width: 56px;
+            height: 56px;
+            background: #ecfdf5;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            overflow: hidden;
+        }
+
+        .icon-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-container"><div class="bg-deco"></div></div>
+    <div class="bg-grid"></div>
+
+    <header class="sticky top-0 z-50 py-4 px-8 flex justify-between items-center shadow-sm">
+        <h1 class="text-xl font-black text-emerald-900 flex items-center gap-2">
+            <span class="text-2xl">🍃</span> 疾患説明ガイド
+        </h1>
+        <div class="text-[10px] text-emerald-600 font-bold tracking-widest bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase">
+            Clinic Library
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto py-12 px-6">
+        
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-black text-slate-800 mb-4">説明項目を選択してください</h2>
+            <p class="text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
+                治療法やアフターケアを動画で分かりやすく解説しています。<br class="hidden md:block">
+                ご覧になりたい項目をタップしてください。
+            </p>
+        </div>
+
+        <div class="card-grid" id="card-list"></div>
+    </main>
+
+    <footer class="text-center py-12 text-slate-400 text-[10px] font-bold tracking-widest uppercase">
+        &copy; 2024 Digital Patient Information Portal
+    </footer>
+
+    <script>
+        const guides = [
+            {
+                title: "ウイルス性のイボ",
+                kana: "尋常性疣贅",
+                icon: "step_day0.png",
+                desc: "液体窒素による治療の流れと注意点。",
+                url: "wart_care_movie.html"
+            },
+            {
+                title: "ピアッシング",
+                kana: "アフターケア",
+                icon: "face.png",
+                desc: "洗浄方法とお薬の塗り方。",
+                url: "aftercare_movie.html"
+            },
+            {
+                title: "粉瘤（ふんりゅう）",
+                kana: "アテローム",
+                icon: "⚪",
+                desc: "準備中：手術の流れと術後の処置。",
+                url: "#",
+                disabled: true
+            },
+            {
+                title: "ニキビの治療",
+                kana: "尋常性ざ瘡",
+                icon: "✨",
+                desc: "準備中：洗顔方法と薬の使い方。",
+                url: "#",
+                disabled: true
+            },
+            {
+                title: "水虫・爪水虫",
+                kana: "白癬",
+                icon: "👣",
+                desc: "準備中：治療期間と感染予防。",
+                url: "#",
+                disabled: true
+            },
+            {
+                title: "帯状疱疹",
+                kana: "たいじょうほうしん",
+                icon: "⚡",
+                desc: "準備中：安静と痛みの管理について。",
+                url: "#",
+                disabled: true
+            },
+            {
+                title: "じんましん",
+                kana: "蕁麻疹",
+                icon: "🔴",
+                desc: "準備中：原因特定と内服継続。",
+                url: "#",
+                disabled: true
+            },
+            {
+                title: "アトピー性皮膚炎",
+                kana: "スキンケア",
+                icon: "🧴",
+                desc: "準備中：保湿の重要性と薬の使い方。",
+                url: "#",
+                disabled: true
+            },
+            {
+                title: "とびひ",
+                kana: "伝染性膿痂疹",
+                icon: "🛡️",
+                desc: "準備中：患部の処置と登校の目安。",
+                url: "#",
+                disabled: true
+            },
+            {
+                title: "円形脱毛症",
+                kana: "脱毛症",
+                icon: "👤",
+                desc: "準備中：治療の種類と経過の目安。",
+                url: "#",
+                disabled: true
+            }
+        ];
+
+        const cardList = document.getElementById('card-list');
+
+        guides.forEach(guide => {
+            const card = document.createElement('div');
+            card.className = `menu-card ${guide.disabled ? 'opacity-40 grayscale pointer-events-none' : ''}`;
+            
+            const isImageIcon = guide.icon.includes('.png') || guide.icon.includes('.jpg');
+            const iconHtml = isImageIcon 
+                ? `<img src="${guide.icon}" alt="${guide.title}">` 
+                : guide.icon;
+
+            card.innerHTML = `
+                <div class="icon-box">${iconHtml}</div>
+                <div class="mb-2">
+                    <p class="text-[9px] text-emerald-600 font-bold mb-0.5">${guide.kana}</p>
+                    <h3 class="text-base font-black text-slate-800 leading-tight">${guide.title}</h3>
+                </div>
+                <p class="text-[10px] text-slate-500 font-medium leading-relaxed mb-4 flex-1">${guide.desc}</p>
+                <span class="mt-auto px-5 py-1.5 ${guide.disabled ? 'bg-slate-200' : 'bg-emerald-600'} text-white rounded-full text-[10px] font-black tracking-widest shadow-sm">
+                    ${guide.disabled ? '準備中' : '詳しく見る'}
+                </span>
+            `;
+
+            if (!guide.disabled) {
+                card.onclick = () => { window.location.href = guide.url; };
+            }
+            cardList.appendChild(card);
+        });
+    </script>
+</body>
+</html>
